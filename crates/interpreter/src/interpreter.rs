@@ -294,7 +294,10 @@ impl<IW: InterpreterTypes> Interpreter<IW> {
         // it will do noop and just stop execution of this contract
         self.bytecode.relative_jump(1);
 
-        let instruction = unsafe { instruction_table.get_unchecked(opcode as usize) };
+        // Copy the Instruction (16 bytes: fn pointer + u64 gas) into a local
+        // so both fields are register-resident, avoiding a second memory load
+        // when calling execute() after reading static_gas().
+        let instruction = *unsafe { instruction_table.get_unchecked(opcode as usize) };
 
         if self.gas.record_cost_unsafe(instruction.static_gas()) {
             return self.halt_oog();
