@@ -20,10 +20,19 @@ pub use stack::{Stack, STACK_LIMIT};
 
 // imports
 use crate::{
-    host::DummyHost, instruction_context::InstructionContext, interpreter_types::*, Gas, Host,
-    InstructionResult, InstructionTable, InterpreterAction,
+    host::DummyHost, instruction_context::InstructionContext,
+    instructions::{arithmetic, bitwise, control, stack as stack_ops, system},
+    interpreter_types::*, Gas, Host, InstructionResult, InstructionTable, InterpreterAction,
 };
-use bytecode::Bytecode;
+use bytecode::{
+    opcode::{
+        ADD, GAS, GT, JUMP, JUMPI, LT, POP, PUSH1, PUSH10, PUSH11, PUSH12, PUSH13, PUSH14,
+        PUSH15, PUSH16, PUSH17, PUSH18, PUSH19, PUSH2, PUSH20, PUSH21, PUSH22, PUSH23, PUSH24,
+        PUSH25, PUSH26, PUSH27, PUSH28, PUSH29, PUSH3, PUSH30, PUSH31, PUSH32, PUSH4, PUSH5,
+        PUSH6, PUSH7, PUSH8, PUSH9,
+    },
+    Bytecode,
+};
 use primitives::{hardfork::SpecId, Bytes};
 
 /// Main interpreter structure that contains all components defined in [`InterpreterTypes`].
@@ -294,19 +303,62 @@ impl<IW: InterpreterTypes> Interpreter<IW> {
         // it will do noop and just stop execution of this contract
         self.bytecode.relative_jump(1);
 
-        // Copy the Instruction (16 bytes: fn pointer + u64 gas) into a local
-        // so both fields are register-resident, avoiding a second memory load
-        // when calling execute() after reading static_gas().
-        let instruction = *unsafe { instruction_table.get_unchecked(opcode as usize) };
-
-        if self.gas.record_cost_unsafe(instruction.static_gas()) {
-            return self.halt_oog();
+        // Hot-path match: for the most frequent opcodes, bypass the instruction
+        // table entirely — hardcode the static gas cost and call the handler
+        // directly. This eliminates both the table load and the indirect call,
+        // converting BTB-predicted branches into statically-predicted direct calls.
+        //
+        // Gas values: PUSH1-32=3, JUMPI=10, ADD=3, LT=3, JUMP=8, GAS=2, GT=3, POP=2
+        match opcode {
+            PUSH1 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<1, IW, H>(ctx) }
+            PUSH2 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<2, IW, H>(ctx) }
+            PUSH3 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<3, IW, H>(ctx) }
+            PUSH4 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<4, IW, H>(ctx) }
+            PUSH5 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<5, IW, H>(ctx) }
+            PUSH6 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<6, IW, H>(ctx) }
+            PUSH7 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<7, IW, H>(ctx) }
+            PUSH8 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<8, IW, H>(ctx) }
+            PUSH9 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<9, IW, H>(ctx) }
+            PUSH10 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<10, IW, H>(ctx) }
+            PUSH11 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<11, IW, H>(ctx) }
+            PUSH12 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<12, IW, H>(ctx) }
+            PUSH13 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<13, IW, H>(ctx) }
+            PUSH14 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<14, IW, H>(ctx) }
+            PUSH15 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<15, IW, H>(ctx) }
+            PUSH16 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<16, IW, H>(ctx) }
+            PUSH17 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<17, IW, H>(ctx) }
+            PUSH18 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<18, IW, H>(ctx) }
+            PUSH19 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<19, IW, H>(ctx) }
+            PUSH20 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<20, IW, H>(ctx) }
+            PUSH21 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<21, IW, H>(ctx) }
+            PUSH22 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<22, IW, H>(ctx) }
+            PUSH23 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<23, IW, H>(ctx) }
+            PUSH24 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<24, IW, H>(ctx) }
+            PUSH25 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<25, IW, H>(ctx) }
+            PUSH26 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<26, IW, H>(ctx) }
+            PUSH27 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<27, IW, H>(ctx) }
+            PUSH28 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<28, IW, H>(ctx) }
+            PUSH29 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<29, IW, H>(ctx) }
+            PUSH30 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<30, IW, H>(ctx) }
+            PUSH31 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<31, IW, H>(ctx) }
+            PUSH32 => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::push::<32, IW, H>(ctx) }
+            JUMPI => { if self.gas.record_cost_unsafe(10) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; control::jumpi(ctx) }
+            LT => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; bitwise::lt(ctx) }
+            JUMP => { if self.gas.record_cost_unsafe(8) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; control::jump(ctx) }
+            GAS => { if self.gas.record_cost_unsafe(2) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; system::gas(ctx) }
+            ADD => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; arithmetic::add(ctx) }
+            GT => { if self.gas.record_cost_unsafe(3) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; bitwise::gt(ctx) }
+            POP => { if self.gas.record_cost_unsafe(2) { return self.halt_oog(); } let ctx = InstructionContext { interpreter: self, host }; stack_ops::pop(ctx) }
+            _ => {
+                // Cold path: load from instruction table and dispatch indirectly.
+                let instruction = *unsafe { instruction_table.get_unchecked(opcode as usize) };
+                if self.gas.record_cost_unsafe(instruction.static_gas()) {
+                    return self.halt_oog();
+                }
+                let ctx = InstructionContext { interpreter: self, host };
+                instruction.execute(ctx);
+            }
         }
-        let context = InstructionContext {
-            interpreter: self,
-            host,
-        };
-        instruction.execute(context);
     }
 
     /// Executes the instruction at the current instruction pointer.
